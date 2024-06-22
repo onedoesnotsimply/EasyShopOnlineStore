@@ -34,6 +34,8 @@ public class CategoriesController
     @PreAuthorize("permitAll()")
     public List<Category> getAll()
     {
+        // Add error handling to all methods
+
         // find and return all categories
         List<Category> categories = categoryDao.getAllCategories();
         return categories;
