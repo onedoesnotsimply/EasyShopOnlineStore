@@ -19,6 +19,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("cart")
 @PreAuthorize("hasRole('ROLE_USER')")
+@CrossOrigin
 public class ShoppingCartController
 {
     // a shopping cart requires
@@ -39,11 +40,7 @@ public class ShoppingCartController
     {
         try
         {
-            // get the currently logged in username
-            String userName = principal.getName();
-            // find database user by userId
-            User user = userDao.getByUserName(userName);
-            int userId = user.getId();
+            int userId = getUserId(principal);
 
             // use the shoppingcartDao to get all items in the cart and return the cart
             ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
@@ -60,11 +57,7 @@ public class ShoppingCartController
     @PostMapping("/products/{id}")
     public void addProductToCart(@PathVariable int id, Principal principal){
 
-        // get the currently logged in username
-        String userName = principal.getName();
-        // find database user by userId
-        User user = userDao.getByUserName(userName);
-        int userId = user.getId();
+        int userId = getUserId(principal);
 
         ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
 
@@ -81,14 +74,16 @@ public class ShoppingCartController
     // the BODY should be a ShoppingCartItem - quantity is the only value that will be updated
     @PutMapping("/products/{id}")
     public void updateCartProduct(@PathVariable int id, Principal principal, @RequestBody ShoppingCartItem item){
+        int userId = getUserId(principal);
 
-        // get the currently logged in username
-        String userName = principal.getName();
-        // find database user by userId
-        User user = userDao.getByUserName(userName);
-        int userId = user.getId();
+        ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
 
-        shoppingCartDao.updateProduct(userId, id, item.getQuantity());
+        if (shoppingCart.contains(id)){
+            shoppingCartDao.updateProduct(userId, id, item.getQuantity());
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item doesn't exist to update.");
+        }
+
 
     }
 
@@ -96,13 +91,18 @@ public class ShoppingCartController
     // https://localhost:8080/cart
     @DeleteMapping("")
     public void deleteCartItems(Principal principal){
+
+        int userId = getUserId(principal);
+
+        shoppingCartDao.clearCart(userId);
+    }
+
+    private int getUserId(Principal principal){
         // get the currently logged in username
         String userName = principal.getName();
         // find database user by userId
         User user = userDao.getByUserName(userName);
-        int userId = user.getId();
-
-        shoppingCartDao.clearCart(userId);
+        return user.getId();
     }
 
 }
