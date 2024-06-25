@@ -18,7 +18,7 @@ import java.security.Principal;
 // only logged in users should have access to these actions
 @RestController
 @RequestMapping("cart")
-@PreAuthorize("hasRole('ROLE_USER')")
+//@PreAuthorize("hasRole('ROLE_USER')")
 @CrossOrigin
 public class ShoppingCartController
 {
@@ -36,6 +36,7 @@ public class ShoppingCartController
 
     // each method in this controller requires a Principal object as a parameter
     @GetMapping("")
+    @PreAuthorize("isAuthenticated()")
     public ShoppingCart getCart(Principal principal)
     {
         try
@@ -55,13 +56,14 @@ public class ShoppingCartController
     // add a POST method to add a product to the cart - the url should be
     // https://localhost:8080/cart/products/15 (15 is the productId to be added
     @PostMapping("/products/{id}")
+    @PreAuthorize("isAuthenticated()")
     public void addProductToCart(@PathVariable int id, Principal principal){
 
         int userId = getUserId(principal);
 
         ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
 
-        if (shoppingCart.get(id)==null) {
+        if (!shoppingCart.contains(id)) {
             shoppingCartDao.addProduct(userId,id,1);
         } else {
             shoppingCartDao.updateProduct(userId, id, shoppingCart.get(id).getQuantity() + 1);
@@ -73,6 +75,7 @@ public class ShoppingCartController
     // https://localhost:8080/cart/products/15 (15 is the productId to be updated)
     // the BODY should be a ShoppingCartItem - quantity is the only value that will be updated
     @PutMapping("/products/{id}")
+    @PreAuthorize("isAuthenticated()")
     public void updateCartProduct(@PathVariable int id, Principal principal, @RequestBody ShoppingCartItem item){
         int userId = getUserId(principal);
 
@@ -90,6 +93,8 @@ public class ShoppingCartController
     // add a DELETE method to clear all products from the current users cart
     // https://localhost:8080/cart
     @DeleteMapping("")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(value=HttpStatus.NO_CONTENT)
     public void deleteCartItems(Principal principal){
 
         int userId = getUserId(principal);
