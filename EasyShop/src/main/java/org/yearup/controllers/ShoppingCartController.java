@@ -79,17 +79,21 @@ public class ShoppingCartController
     public ShoppingCartItem addProductToCart(@PathVariable int id, Principal principal){
 
         int userId = getUserId(principal);
+        System.out.println(id);
 
         ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
 
         if (!shoppingCart.contains(id)) {
             shoppingCartDao.addProduct(userId,id,1);
-            shoppingCart = shoppingCartDao.getByUserId(userId);
+            //shoppingCart = shoppingCartDao.getByUserId(userId);
 
         } else {
             shoppingCartDao.updateProduct(userId, id, shoppingCart.get(id).getQuantity() + 1);
-            shoppingCart = shoppingCartDao.getByUserId(userId);
+            //shoppingCart = shoppingCartDao.getByUserId(userId);
         }
+
+        shoppingCart = shoppingCartDao.getByUserId(userId);
+
         return shoppingCart.get(id);
     }
 
@@ -100,6 +104,7 @@ public class ShoppingCartController
     @PreAuthorize("isAuthenticated()")
     public void updateCartProduct(@PathVariable int id, Principal principal, @RequestBody ShoppingCartItem item){
         int userId = getUserId(principal);
+
 
         ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
 

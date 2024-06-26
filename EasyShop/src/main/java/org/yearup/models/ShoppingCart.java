@@ -13,6 +13,13 @@ public class ShoppingCart
         return items;
     }
 
+    @Override
+    public String toString() {
+        return "ShoppingCart{" +
+                "items=" + items +
+                '}';
+    }
+
     public void setItems(Map<Integer, ShoppingCartItem> items)
     {
         this.items = items;

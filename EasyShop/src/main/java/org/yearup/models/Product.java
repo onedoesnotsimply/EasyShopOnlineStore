@@ -18,6 +18,21 @@ public class Product
     {
     }
 
+    @Override
+    public String toString() {
+        return "Product{" +
+                "productId=" + productId +
+                ", name='" + name + '\'' +
+                ", price=" + price +
+                ", categoryId=" + categoryId +
+                ", description='" + description + '\'' +
+                ", color='" + color + '\'' +
+                ", stock=" + stock +
+                ", isFeatured=" + isFeatured +
+                ", imageUrl='" + imageUrl + '\'' +
+                '}';
+    }
+
     public Product(int productId, String name, BigDecimal price, int categoryId, String description, String color, int stock, boolean isFeatured, String imageUrl)
     {
         this.productId = productId;

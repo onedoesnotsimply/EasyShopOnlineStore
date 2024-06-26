@@ -11,6 +11,15 @@ public class ShoppingCartItem
     private BigDecimal discountPercent = BigDecimal.ZERO;
 
 
+    @Override
+    public String toString() {
+        return "ShoppingCartItem{" +
+                "product=" + product +
+                ", quantity=" + quantity +
+                ", discountPercent=" + discountPercent +
+                '}';
+    }
+
     public Product getProduct()
     {
         return product;
