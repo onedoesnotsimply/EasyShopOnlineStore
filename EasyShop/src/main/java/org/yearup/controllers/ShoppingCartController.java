@@ -53,6 +53,7 @@ public class ShoppingCartController
         }
     }
 
+    /*
     // add a POST method to add a product to the cart - the url should be
     // https://localhost:8080/cart/products/15 (15 is the productId to be added
     @PostMapping("/products/{id}")
@@ -69,7 +70,28 @@ public class ShoppingCartController
             shoppingCartDao.updateProduct(userId, id, shoppingCart.get(id).getQuantity() + 1);
         }
     }
+     */
 
+    // add a POST method to add a product to the cart - the url should be
+    // https://localhost:8080/cart/products/15 (15 is the productId to be added
+    @PostMapping("/products/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ShoppingCartItem addProductToCart(@PathVariable int id, Principal principal){
+
+        int userId = getUserId(principal);
+
+        ShoppingCart shoppingCart = shoppingCartDao.getByUserId(userId);
+
+        if (!shoppingCart.contains(id)) {
+            shoppingCartDao.addProduct(userId,id,1);
+            shoppingCart = shoppingCartDao.getByUserId(userId);
+
+        } else {
+            shoppingCartDao.updateProduct(userId, id, shoppingCart.get(id).getQuantity() + 1);
+            shoppingCart = shoppingCartDao.getByUserId(userId);
+        }
+        return shoppingCart.get(id);
+    }
 
     // add a PUT method to update an existing product in the cart - the url should be
     // https://localhost:8080/cart/products/15 (15 is the productId to be updated)
@@ -86,8 +108,6 @@ public class ShoppingCartController
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item doesn't exist to update.");
         }
-
-
     }
 
     // add a DELETE method to clear all products from the current users cart
