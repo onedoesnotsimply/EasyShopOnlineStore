@@ -8,40 +8,64 @@ class ShoppingCartService {
     };
 
     addToCart(productId)
-    {
-        const url = `${config.baseUrl}/cart/products/${productId}`;
-        // const headers = userService.getHeaders();
+        {
+            const url = `${config.baseUrl}/cart/products/${productId}`;
 
-        axios.post(url, {})// ,{headers})
-            .then(response => {
-                this.setCart(response.data)
+            axios.post(url, {})
+                .then(response => {
+                    console.log("Server response:", response);
 
-                this.updateCartDisplay()
+                    if (response.data) {
+                        this.setCart(response.data, true);
+                        this.updateCartDisplay();
+                    } else {
+                        throw new Error("No data received from server.");
+                    }
+                })
+                .catch(error => {
+                    let errorMessage = "Add to cart failed.";
+                    if (error.response) {
+                        errorMessage += ` Server responded with status: ${error.response.status}. ${error.response.data}`;
+                    } else if (error.request) {
+                        errorMessage += " No response received from server.";
+                    } else {
+                        errorMessage += ` Error setting up request: ${error.message}`;
+                    }
+                    console.error(errorMessage);
+                    const data = { error: errorMessage };
+                    templateBuilder.append("error", data, "errors");
+                });
+        }
 
-            })
-            .catch(error => {
-
-                const data = {
-                    error: "Add to cart failed."
+        setCart(data, isSingleItem = false)
+        {
+            if (isSingleItem) {
+                const existingItemIndex = this.cart.items.findIndex(item => item.product.id === data.product.id);
+                if (existingItemIndex !== -1) {
+                    this.cart.items[existingItemIndex].quantity = data.quantity;
+                    this.cart.items[existingItemIndex].lineTotal = data.lineTotal;
+                } else {
+                    this.cart.items.push(data);
+                }
+                this.cart.total = this.cart.items.reduce((acc, item) => acc + item.lineTotal, 0);
+            } else {
+                this.cart = {
+                    items: [],
+                    total: 0
                 };
 
-                templateBuilder.append("error", data, "errors")
-            })
-    }
+                if (data && data.items) {
+                    this.cart.total = data.total || 0;
 
-    setCart(data)
-    {
-        this.cart = {
-            items: [],
-            total: 0
+                    for (const [key, value] of Object.entries(data.items)) {
+                        this.cart.items.push(value);
+                    }
+                } else {
+                    console.error("Invalid cart data received:", data);
+                    throw new Error("Invalid cart data received from server.");
+                }
+            }
         }
-
-        this.cart.total = data.total;
-
-        for (const [key, value] of Object.entries(data.items)) {
-            this.cart.items.push(value);
-        }
-    }
 
     loadCart()
     {
@@ -142,49 +166,64 @@ class ShoppingCartService {
     }
 
     clearCart()
-    {
+        {
+            const url = `${config.baseUrl}/cart`;
 
-        const url = `${config.baseUrl}/cart`;
+            axios.delete(url)
+                 .then(response => {
+                     if (response.status === 204) {
+                         this.cart = {
+                             items: [],
+                             total: 0
+                         };
 
-        axios.delete(url)
-             .then(response => {
-                 this.cart = {
-                     items: [],
-                     total: 0
-                 }
+                         this.updateCartDisplay();
+                         this.loadCartPage();
+                     } else {
+                         throw new Error("Unexpected response status: " + response.status);
+                     }
+                 })
+                 .catch(error => {
+                     let errorMessage = "Empty cart failed.";
+                     if (error.response) {
+                         errorMessage += ` Server responded with status: ${error.response.status}. ${error.response.data}`;
+                     } else if (error.request) {
+                         errorMessage += " No response received from server.";
+                     } else {
+                         errorMessage += ` Error setting up request: ${error.message}`;
+                     }
+                     console.error(errorMessage);
+                     const data = { error: errorMessage };
+                     templateBuilder.append("error", data, "errors");
+                 });
+        }
 
-                 this.cart.total = response.data.total;
+    updateCartDisplay() {
+      console.log("cartdisplay")
+      try {
+        const cartControl = document.getElementById("cart-items");
+        const itemCount = this.cart.items.reduce((acc, item) => acc + item.quantity, 0);
+        cartControl.innerText = itemCount;
+      } catch (e) {
+        console.error(e);
+      }
 
-                 for (const [key, value] of Object.entries(response.data.items)) {
-                     this.cart.items.push(value);
-                 }
-
-                 this.updateCartDisplay()
-                 this.loadCartPage()
-
-             })
-             .catch(error => {
-
-                 const data = {
-                     error: "Empty cart failed."
-                 };
-
-                 templateBuilder.append("error", data, "errors")
-             })
     }
-
+    /*
+    //updateCartDisplay()
     updateCartDisplay()
-    {
-        try {
-            const itemCount = this.cart.items.length;
-            const cartControl = document.getElementById("cart-items")
+        {
+            try {
+                const itemCount = this.cart.items.length;
+                const cartControl = document.getElementById("cart-items")
 
-            cartControl.innerText = itemCount;
-        }
-        catch (e) {
+                cartControl.innerText = itemCount;
+            }
+            catch (e) {
 
+            }
         }
-    }
+        */
 }
 
 
